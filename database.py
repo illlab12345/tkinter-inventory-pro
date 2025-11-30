@@ -250,6 +250,63 @@ class DatabaseManager:
             'max_stock': row[10],
             'created_at': row[11]
         } for row in result]
+
+    def search_items(self, keyword: str) -> List[Dict]:
+        """按物资代码或名称搜索物资"""
+        result = self.execute_query('''
+            SELECT i.item_id, i.item_code, i.item_name, c.category_name, 
+                   i.specification, i.unit, i.supplier, i.purchase_price, 
+                   i.selling_price, i.min_stock, i.max_stock, i.created_at
+            FROM items i
+            JOIN categories c ON i.category_id = c.category_id
+            WHERE i.item_code LIKE ? OR i.item_name LIKE ?
+            ORDER BY i.item_id
+        ''', (f'%{keyword}%', f'%{keyword}%'))
+        return [{
+            'item_id': row[0],
+            'item_code': row[1],
+            'item_name': row[2],
+            'category_name': row[3],
+            'specification': row[4],
+            'unit': row[5],
+            'supplier': row[6],
+            'purchase_price': row[7],
+            'selling_price': row[8],
+            'min_stock': row[9],
+            'max_stock': row[10],
+            'created_at': row[11]
+        } for row in result]
+
+    def search_inventory_status(self, keyword: str) -> List[Dict]:
+        """按物资代码或名称搜索库存状态"""
+        result = self.execute_query('''
+            SELECT i.item_id, i.item_code, i.item_name, c.category_name, 
+                   i.unit, i.min_stock, i.max_stock,
+                   COALESCE(SUM(inv.quantity), 0) as current_stock,
+                   CASE 
+                       WHEN COALESCE(SUM(inv.quantity), 0) <= i.min_stock THEN '库存不足'
+                       WHEN COALESCE(SUM(inv.quantity), 0) >= i.max_stock THEN '库存过高'
+                       ELSE '正常'
+                   END as status
+            FROM items i
+            JOIN categories c ON i.category_id = c.category_id
+            LEFT JOIN inventory inv ON i.item_id = inv.item_id
+            WHERE i.item_code LIKE ? OR i.item_name LIKE ?
+            GROUP BY i.item_id
+            ORDER BY i.item_id
+        ''', (f'%{keyword}%', f'%{keyword}%'))
+        
+        return [{
+            'item_id': row[0],
+            'item_code': row[1],
+            'item_name': row[2],
+            'category_name': row[3],
+            'unit': row[4],
+            'min_stock': row[5],
+            'max_stock': row[6],
+            'current_stock': row[7],
+            'status': row[8]
+        } for row in result]
     
     # 库存管理相关方法
     def stock_in(self, item_id: int, quantity: int, unit_price: float, 

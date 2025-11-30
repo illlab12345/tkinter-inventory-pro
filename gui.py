@@ -112,7 +112,25 @@ class InventoryManagementSystem:
         
         title_label = tk.Label(self.content_frame, text="库存状态", 
                               font=('微软雅黑', 18, 'bold'), bg='#f0f0f0')
-        title_label.pack(anchor='w', pady=(0, 20))
+        title_label.pack(anchor='w', pady=(0, 10))
+        
+        # 添加搜索框
+        search_frame = tk.Frame(self.content_frame, bg='#f0f0f0')
+        search_frame.pack(fill='x', pady=(0, 10))
+        
+        tk.Label(search_frame, text="搜索:", bg='#f0f0f0', font=('微软雅黑', 10)).pack(side='left', padx=(0, 5))
+        
+        self.search_var = tk.StringVar()
+        search_entry = tk.Entry(search_frame, textvariable=self.search_var, width=30, font=('微软雅黑', 10))
+        search_entry.pack(side='left', padx=5)
+        
+        search_btn = tk.Button(search_frame, text="搜索", command=self.search_inventory,
+                              font=('微软雅黑', 10), bg='#3498db', fg='white')
+        search_btn.pack(side='left', padx=5)
+        
+        clear_btn = tk.Button(search_frame, text="清除搜索", command=self.clear_search_inventory,
+                             font=('微软雅黑', 10), bg='#95a5a6', fg='white')
+        clear_btn.pack(side='left', padx=5)
         
         # 创建表格框架（包含水平和垂直滚动条）
         table_container = tk.Frame(self.content_frame, bg='white')
@@ -251,7 +269,25 @@ class InventoryManagementSystem:
         
         title_label = tk.Label(self.content_frame, text="物资信息管理", 
                               font=('微软雅黑', 18, 'bold'), bg='#f0f0f0')
-        title_label.pack(anchor='w', pady=(0, 20))
+        title_label.pack(anchor='w', pady=(0, 10))
+        
+        # 搜索框架
+        search_frame = tk.Frame(self.content_frame, bg='#f0f0f0')
+        search_frame.pack(fill='x', pady=(0, 10))
+        
+        tk.Label(search_frame, text="搜索:", bg='#f0f0f0', font=('微软雅黑', 10)).pack(side='left', padx=(0, 5))
+        
+        self.item_search_var = tk.StringVar()
+        search_entry = tk.Entry(search_frame, textvariable=self.item_search_var, width=30)
+        search_entry.pack(side='left', padx=5)
+        
+        search_btn = tk.Button(search_frame, text="搜索", command=self.search_items,
+                              font=('微软雅黑', 9), bg='#3498db', fg='white')
+        search_btn.pack(side='left', padx=5)
+        
+        clear_btn = tk.Button(search_frame, text="清除搜索", command=self.clear_search_items,
+                             font=('微软雅黑', 9), bg='#95a5a6', fg='white')
+        clear_btn.pack(side='left', padx=5)
         
         # 添加物资按钮
         add_frame = tk.Frame(self.content_frame, bg='#f0f0f0')
@@ -276,23 +312,23 @@ class InventoryManagementSystem:
         # 创建表格
         columns = ('item_id', 'item_code', 'item_name', 'category', 'specification', 
                   'unit', 'supplier', 'purchase_price', 'selling_price')
-        tree = ttk.Treeview(table_container, columns=columns, show='headings', height=15,
+        self.item_tree = ttk.Treeview(table_container, columns=columns, show='headings', height=15,
                            xscrollcommand=h_scrollbar.set, yscrollcommand=v_scrollbar.set)
         
-        tree.heading('item_id', text='ID')
-        tree.heading('item_code', text='物资编码')
-        tree.heading('item_name', text='物资名称')
-        tree.heading('category', text='类目')
-        tree.heading('specification', text='规格')
-        tree.heading('unit', text='单位')
-        tree.heading('supplier', text='供应商')
-        tree.heading('purchase_price', text='采购价')
-        tree.heading('selling_price', text='销售价')
+        self.item_tree.heading('item_id', text='ID')
+        self.item_tree.heading('item_code', text='物资编码')
+        self.item_tree.heading('item_name', text='物资名称')
+        self.item_tree.heading('category', text='类目')
+        self.item_tree.heading('specification', text='规格')
+        self.item_tree.heading('unit', text='单位')
+        self.item_tree.heading('supplier', text='供应商')
+        self.item_tree.heading('purchase_price', text='采购价')
+        self.item_tree.heading('selling_price', text='销售价')
         
         # 获取物资数据
         items = self.db.get_items()
         for item in items:
-            tree.insert('', 'end', values=(
+            self.item_tree.insert('', 'end', values=(
                 item['item_id'], item['item_code'], item['item_name'],
                 item['category_name'], item['specification'] or '',
                 item['unit'], item['supplier'] or '',
@@ -301,10 +337,10 @@ class InventoryManagementSystem:
             ))
         
         # 配置滚动条
-        h_scrollbar.config(command=tree.xview)
-        v_scrollbar.config(command=tree.yview)
+        h_scrollbar.config(command=self.item_tree.xview)
+        v_scrollbar.config(command=self.item_tree.yview)
         
-        tree.pack(side='left', fill='both', expand=True)
+        self.item_tree.pack(side='left', fill='both', expand=True)
     
     def show_stock_in(self):
         """显示物资入库界面"""
@@ -764,6 +800,117 @@ class InventoryManagementSystem:
                 messagebox.showerror("错误", "请填写完整信息")
         
         tk.Button(dialog, text="确认", command=submit).pack(pady=10)
+    
+    def search_inventory(self):
+        """搜索库存"""
+        keyword = self.search_var.get().strip()
+        if not keyword:
+            messagebox.showwarning("提示", "请输入搜索关键词")
+            return
+        
+        # 获取搜索结果
+        search_results = self.db.search_inventory_status(keyword)
+        
+        # 更新表格内容
+        self._update_inventory_table(search_results)
+        
+        # 更新统计信息
+        total_items = len(search_results)
+        low_stock = len([i for i in search_results if i['status'] == '库存不足'])
+        high_stock = len([i for i in search_results if i['status'] == '库存过高'])
+        
+        stats_text = f"搜索结果: {total_items} 项 | 库存不足: {low_stock} | 库存过高: {high_stock}"
+        
+        # 查找并更新统计标签
+        for widget in self.content_frame.winfo_children():
+            if isinstance(widget, tk.Frame):
+                for child in widget.winfo_children():
+                    if isinstance(child, tk.Label) and '总物资数' in child.cget('text'):
+                        child.config(text=stats_text)
+                        break
+    
+    def clear_search_inventory(self):
+        """清除库存搜索"""
+        self.search_var.set("")
+        
+        # 重新显示所有库存数据
+        inventory_data = self.db.get_inventory_status()
+        self._update_inventory_table(inventory_data)
+        
+        # 更新统计信息
+        total_items = len(inventory_data)
+        low_stock = len([i for i in inventory_data if i['status'] == '库存不足'])
+        high_stock = len([i for i in inventory_data if i['status'] == '库存过高'])
+        
+        stats_text = f"总物资数: {total_items} | 库存不足: {low_stock} | 库存过高: {high_stock}"
+        
+        # 查找并更新统计标签
+        for widget in self.content_frame.winfo_children():
+            if isinstance(widget, tk.Frame):
+                for child in widget.winfo_children():
+                    if isinstance(child, tk.Label) and '总物资数' in child.cget('text') or '搜索结果' in child.cget('text'):
+                        child.config(text=stats_text)
+                        break
+    
+    def search_items(self):
+        """搜索物资信息"""
+        keyword = self.item_search_var.get().strip()
+        if not keyword:
+            messagebox.showwarning("提示", "请输入搜索关键词")
+            return
+        
+        # 调用数据库搜索方法
+        results = self.db.search_items(keyword)
+        
+        # 更新表格内容
+        self._update_item_table(results)
+    
+    def clear_search_items(self):
+        """清除物资搜索"""
+        self.item_search_var.set("")
+        # 恢复显示所有数据
+        results = self.db.get_items()
+        self._update_item_table(results)
+    
+    def _update_item_table(self, data):
+        """更新物资信息表格"""
+        # 清空表格
+        for item in self.item_tree.get_children():
+            self.item_tree.delete(item)
+        
+        # 添加新数据
+        for item in data:
+            self.item_tree.insert('', 'end', values=(
+                item['item_id'], item['item_code'], item['item_name'],
+                item['category_name'], item['specification'] or '',
+                item['unit'], item['supplier'] or '',
+                f"¥{item['purchase_price']:.2f}" if item['purchase_price'] else '',
+                f"¥{item['selling_price']:.2f}" if item['selling_price'] else ''
+            ))
+    
+    def _update_inventory_table(self, data):
+        """更新库存表格数据"""
+        # 查找表格容器
+        for widget in self.content_frame.winfo_children():
+            if isinstance(widget, tk.Frame) and widget.winfo_children():
+                # 查找Treeview组件
+                for child in widget.winfo_children():
+                    if isinstance(child, ttk.Treeview):
+                        # 清空现有数据
+                        child.delete(*child.get_children())
+                        
+                        # 添加新数据
+                        for item in data:
+                            status_color = '#e74c3c' if item['status'] == '库存不足' else (
+                                '#f39c12' if item['status'] == '库存过高' else '#27ae60'
+                            )
+                            
+                            child.insert('', 'end', values=(
+                                item['item_code'], item['item_name'], item['category_name'],
+                                item['unit'], item['min_stock'], item['max_stock'],
+                                item['current_stock'], item['status']
+                            ), tags=(status_color,))
+                        return
     
     def submit_stock_in(self):
         """提交入库"""
