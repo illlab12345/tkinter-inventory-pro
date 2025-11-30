@@ -251,17 +251,33 @@ class DatabaseManager:
             'created_at': row[11]
         } for row in result]
 
-    def search_items(self, keyword: str) -> List[Dict]:
-        """按物资代码或名称搜索物资"""
-        result = self.execute_query('''
+    def search_items(self, keyword: str = "", category_filter: str = "全部", supplier_filter: str = "全部") -> List[Dict]:
+        """按物资代码、名称、类目、供应商搜索物资"""
+        query = '''
             SELECT i.item_id, i.item_code, i.item_name, c.category_name, 
                    i.specification, i.unit, i.supplier, i.purchase_price, 
                    i.selling_price, i.min_stock, i.max_stock, i.created_at
             FROM items i
             JOIN categories c ON i.category_id = c.category_id
-            WHERE i.item_code LIKE ? OR i.item_name LIKE ?
-            ORDER BY i.item_id
-        ''', (f'%{keyword}%', f'%{keyword}%'))
+            WHERE 1=1
+        '''
+        params = []
+        
+        if keyword:
+            query += " AND (i.item_code LIKE ? OR i.item_name LIKE ?)"
+            params.extend([f'%{keyword}%', f'%{keyword}%'])
+        
+        if category_filter != "全部":
+            query += " AND c.category_name = ?"
+            params.append(category_filter)
+        
+        if supplier_filter != "全部":
+            query += " AND i.supplier = ?"
+            params.append(supplier_filter)
+        
+        query += " ORDER BY i.item_id"
+        
+        result = self.execute_query(query, params)
         return [{
             'item_id': row[0],
             'item_code': row[1],
@@ -277,9 +293,9 @@ class DatabaseManager:
             'created_at': row[11]
         } for row in result]
 
-    def search_inventory_status(self, keyword: str) -> List[Dict]:
-        """按物资代码或名称搜索库存状态"""
-        result = self.execute_query('''
+    def search_inventory_status(self, keyword: str = "", category_filter: str = "全部", status_filter: str = "全部") -> List[Dict]:
+        """按物资代码、名称、类目、状态搜索库存状态"""
+        query = '''
             SELECT i.item_id, i.item_code, i.item_name, c.category_name, 
                    i.unit, i.min_stock, i.max_stock,
                    COALESCE(SUM(inv.quantity), 0) as current_stock,
@@ -291,10 +307,32 @@ class DatabaseManager:
             FROM items i
             JOIN categories c ON i.category_id = c.category_id
             LEFT JOIN inventory inv ON i.item_id = inv.item_id
-            WHERE i.item_code LIKE ? OR i.item_name LIKE ?
-            GROUP BY i.item_id
-            ORDER BY i.item_id
-        ''', (f'%{keyword}%', f'%{keyword}%'))
+            WHERE 1=1
+        '''
+        params = []
+        
+        if keyword:
+            query += " AND (i.item_code LIKE ? OR i.item_name LIKE ?)"
+            params.extend([f'%{keyword}%', f'%{keyword}%'])
+        
+        if category_filter != "全部":
+            query += " AND c.category_name = ?"
+            params.append(category_filter)
+        
+        query += " GROUP BY i.item_id"
+        
+        # 如果指定了状态筛选，需要在HAVING子句中处理
+        if status_filter != "全部":
+            if status_filter == "库存不足":
+                query += " HAVING current_stock <= i.min_stock"
+            elif status_filter == "库存过高":
+                query += " HAVING current_stock >= i.max_stock"
+            elif status_filter == "正常":
+                query += " HAVING current_stock > i.min_stock AND current_stock < i.max_stock"
+        
+        query += " ORDER BY i.item_id"
+        
+        result = self.execute_query(query, params)
         
         return [{
             'item_id': row[0],

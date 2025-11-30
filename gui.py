@@ -24,11 +24,18 @@ class InventoryManagementSystem:
             'role': 'admin'
         }
         
+        # 预警通知相关变量
+        self.last_alert_check = None
+        self.alert_notification_shown = False
+        
         # 设置样式
         self.setup_styles()
         
         # 创建主界面
         self.create_main_interface()
+        
+        # 启动时检查库存预警
+        self.check_stock_alerts()
     
     def setup_styles(self):
         """设置界面样式"""
@@ -37,6 +44,102 @@ class InventoryManagementSystem:
         style.configure('Header.TLabel', font=('微软雅黑', 12, 'bold'), foreground='#34495e')
         style.configure('Normal.TLabel', font=('微软雅黑', 10))
         style.configure('Accent.TButton', font=('微软雅黑', 10, 'bold'), foreground='white')
+    
+    def check_stock_alerts(self, manual_check=False):
+        """检查库存预警并显示通知
+        
+        Args:
+            manual_check: 是否为手动检查（True表示用户点击按钮）
+        """
+        try:
+            # 获取库存状态数据
+            inventory_data = self.db.get_inventory_status()
+            
+            # 统计预警信息
+            low_stock_items = []
+            high_stock_items = []
+            
+            for item in inventory_data:
+                if item['status'] == '库存不足':
+                    low_stock_items.append(item)
+                elif item['status'] == '库存过高':
+                    high_stock_items.append(item)
+            
+            # 显示预警通知的条件：
+            # 1. 有预警信息且未显示过通知（自动检查）
+            # 2. 有预警信息且是手动检查（用户点击按钮）
+            if (low_stock_items or high_stock_items) and (not self.alert_notification_shown or manual_check):
+                self.show_alert_notification(low_stock_items, high_stock_items)
+                self.alert_notification_shown = True
+            
+            # 更新最后检查时间
+            self.last_alert_check = datetime.now()
+            
+            # 更新预警统计标签
+            self.update_alert_summary()
+            
+        except Exception as e:
+            print(f"检查库存预警时出错: {e}")
+    
+    def update_alert_summary(self):
+        """更新预警统计标签"""
+        try:
+            # 获取当前预警统计
+            low_stock_count, high_stock_count = self.get_alert_summary()
+            
+            # 查找预警统计标签并更新文本
+            for widget in self.content_frame.winfo_children():
+                if isinstance(widget, tk.Frame):
+                    for child in widget.winfo_children():
+                        if isinstance(child, tk.Label) and "库存预警" in child.cget("text"):
+                            alert_text = f"库存预警: 库存不足 {low_stock_count} 种 | 库存过高 {high_stock_count} 种"
+                            child.configure(text=alert_text, 
+                                          fg='#e74c3c' if low_stock_count > 0 or high_stock_count > 0 else '#27ae60')
+                            break
+        except Exception as e:
+            print(f"更新预警统计标签时出错: {e}")
+    
+    def show_alert_notification(self, low_stock_items, high_stock_items):
+        """显示库存预警通知"""
+        # 构建预警消息
+        alert_message = "库存预警通知：\n\n"
+        
+        if low_stock_items:
+            alert_message += f"⚠️ 库存不足物资 ({len(low_stock_items)}种):\n"
+            for item in low_stock_items[:5]:  # 最多显示5种
+                alert_message += f"   • {item['item_name']} (当前: {item['current_stock']}{item['unit']}, 最低: {item['min_stock']}{item['unit']})\n"
+            if len(low_stock_items) > 5:
+                alert_message += f"   ... 还有 {len(low_stock_items) - 5} 种物资库存不足\n"
+            alert_message += "\n"
+        
+        if high_stock_items:
+            alert_message += f"📦 库存过高物资 ({len(high_stock_items)}种):\n"
+            for item in high_stock_items[:5]:  # 最多显示5种
+                alert_message += f"   • {item['item_name']} (当前: {item['current_stock']}{item['unit']}, 最高: {item['max_stock']}{item['unit']})\n"
+            if len(high_stock_items) > 5:
+                alert_message += f"   ... 还有 {len(high_stock_items) - 5} 种物资库存过高\n"
+        
+        # 显示通知对话框
+        messagebox.showwarning("库存预警", alert_message)
+    
+    def get_alert_summary(self):
+        """获取预警摘要信息"""
+        try:
+            inventory_data = self.db.get_inventory_status()
+            
+            low_stock_count = 0
+            high_stock_count = 0
+            
+            for item in inventory_data:
+                if item['status'] == '库存不足':
+                    low_stock_count += 1
+                elif item['status'] == '库存过高':
+                    high_stock_count += 1
+            
+            return low_stock_count, high_stock_count
+        except Exception as e:
+            print(f"获取预警摘要时出错: {e}")
+            return 0, 0
         
     def create_main_interface(self):
         """创建主界面"""
@@ -114,21 +217,69 @@ class InventoryManagementSystem:
                               font=('微软雅黑', 18, 'bold'), bg='#f0f0f0')
         title_label.pack(anchor='w', pady=(0, 10))
         
+        # 预警统计和检查按钮
+        alert_frame = tk.Frame(self.content_frame, bg='#f0f0f0')
+        alert_frame.pack(fill='x', pady=(0, 10))
+        
+        # 获取预警统计
+        low_stock_count, high_stock_count = self.get_alert_summary()
+        
+        # 预警统计标签
+        alert_text = f"库存预警: 库存不足 {low_stock_count} 种 | 库存过高 {high_stock_count} 种"
+        alert_label = tk.Label(alert_frame, text=alert_text, 
+                              font=('微软雅黑', 11), bg='#f0f0f0',
+                              fg='#e74c3c' if low_stock_count > 0 or high_stock_count > 0 else '#27ae60')
+        alert_label.pack(side='left', padx=(0, 20))
+        
+        # 检查预警按钮
+        check_alert_btn = tk.Button(alert_frame, text="检查库存预警", 
+                                   command=lambda: self.check_stock_alerts(manual_check=True),
+                                   font=('微软雅黑', 10), bg='#f39c12', fg='white')
+        check_alert_btn.pack(side='left')
+        
         # 添加搜索框
         search_frame = tk.Frame(self.content_frame, bg='#f0f0f0')
         search_frame.pack(fill='x', pady=(0, 10))
         
-        tk.Label(search_frame, text="搜索:", bg='#f0f0f0', font=('微软雅黑', 10)).pack(side='left', padx=(0, 5))
+        # 第一行：关键词搜索
+        keyword_frame = tk.Frame(search_frame, bg='#f0f0f0')
+        keyword_frame.pack(fill='x', pady=(0, 5))
+        
+        tk.Label(keyword_frame, text="关键词:", bg='#f0f0f0', font=('微软雅黑', 10)).pack(side='left', padx=(0, 5))
         
         self.search_var = tk.StringVar()
-        search_entry = tk.Entry(search_frame, textvariable=self.search_var, width=30, font=('微软雅黑', 10))
+        search_entry = tk.Entry(keyword_frame, textvariable=self.search_var, width=30, font=('微软雅黑', 10))
         search_entry.pack(side='left', padx=5)
         
-        search_btn = tk.Button(search_frame, text="搜索", command=self.search_inventory,
+        # 第二行：多条件搜索
+        filter_frame = tk.Frame(search_frame, bg='#f0f0f0')
+        filter_frame.pack(fill='x', pady=(0, 5))
+        
+        tk.Label(filter_frame, text="类目:", bg='#f0f0f0', font=('微软雅黑', 10)).pack(side='left', padx=(0, 5))
+        
+        self.category_filter_var = tk.StringVar(value="全部")
+        categories = self.db.get_categories()
+        category_names = ["全部"] + [cat['category_name'] for cat in categories]
+        category_combo = ttk.Combobox(filter_frame, textvariable=self.category_filter_var, 
+                                     values=category_names, width=15, font=('微软雅黑', 9))
+        category_combo.pack(side='left', padx=5)
+        
+        tk.Label(filter_frame, text="状态:", bg='#f0f0f0', font=('微软雅黑', 10)).pack(side='left', padx=(20, 5))
+        
+        self.status_filter_var = tk.StringVar(value="全部")
+        status_combo = ttk.Combobox(filter_frame, textvariable=self.status_filter_var, 
+                                   values=["全部", "正常", "库存不足", "库存过高"], width=15, font=('微软雅黑', 9))
+        status_combo.pack(side='left', padx=5)
+        
+        # 第三行：按钮
+        button_frame = tk.Frame(search_frame, bg='#f0f0f0')
+        button_frame.pack(fill='x')
+        
+        search_btn = tk.Button(button_frame, text="搜索", command=self.search_inventory,
                               font=('微软雅黑', 10), bg='#3498db', fg='white')
         search_btn.pack(side='left', padx=5)
         
-        clear_btn = tk.Button(search_frame, text="清除搜索", command=self.clear_search_inventory,
+        clear_btn = tk.Button(button_frame, text="清除搜索", command=self.clear_search_inventory,
                              font=('微软雅黑', 10), bg='#95a5a6', fg='white')
         clear_btn.pack(side='left', padx=5)
         
@@ -275,17 +426,47 @@ class InventoryManagementSystem:
         search_frame = tk.Frame(self.content_frame, bg='#f0f0f0')
         search_frame.pack(fill='x', pady=(0, 10))
         
-        tk.Label(search_frame, text="搜索:", bg='#f0f0f0', font=('微软雅黑', 10)).pack(side='left', padx=(0, 5))
+        # 第一行：关键词搜索
+        keyword_frame = tk.Frame(search_frame, bg='#f0f0f0')
+        keyword_frame.pack(fill='x', pady=(0, 5))
+        
+        tk.Label(keyword_frame, text="关键词:", bg='#f0f0f0', font=('微软雅黑', 10)).pack(side='left', padx=(0, 5))
         
         self.item_search_var = tk.StringVar()
-        search_entry = tk.Entry(search_frame, textvariable=self.item_search_var, width=30)
+        search_entry = tk.Entry(keyword_frame, textvariable=self.item_search_var, width=30)
         search_entry.pack(side='left', padx=5)
         
-        search_btn = tk.Button(search_frame, text="搜索", command=self.search_items,
+        # 第二行：多条件搜索
+        filter_frame = tk.Frame(search_frame, bg='#f0f0f0')
+        filter_frame.pack(fill='x', pady=(0, 5))
+        
+        tk.Label(filter_frame, text="类目:", bg='#f0f0f0', font=('微软雅黑', 10)).pack(side='left', padx=(0, 5))
+        
+        self.item_category_filter_var = tk.StringVar(value="全部")
+        categories = self.db.get_categories()
+        category_names = ["全部"] + [cat['category_name'] for cat in categories]
+        category_combo = ttk.Combobox(filter_frame, textvariable=self.item_category_filter_var, 
+                                     values=category_names, width=15, font=('微软雅黑', 9))
+        category_combo.pack(side='left', padx=5)
+        
+        tk.Label(filter_frame, text="供应商:", bg='#f0f0f0', font=('微软雅黑', 10)).pack(side='left', padx=(20, 5))
+        
+        self.supplier_filter_var = tk.StringVar(value="全部")
+        suppliers = self.db.get_items()
+        supplier_names = ["全部"] + list(set([item['supplier'] for item in suppliers if item['supplier']]))
+        supplier_combo = ttk.Combobox(filter_frame, textvariable=self.supplier_filter_var, 
+                                     values=supplier_names, width=15, font=('微软雅黑', 9))
+        supplier_combo.pack(side='left', padx=5)
+        
+        # 第三行：按钮
+        button_frame = tk.Frame(search_frame, bg='#f0f0f0')
+        button_frame.pack(fill='x')
+        
+        search_btn = tk.Button(button_frame, text="搜索", command=self.search_items,
                               font=('微软雅黑', 9), bg='#3498db', fg='white')
         search_btn.pack(side='left', padx=5)
         
-        clear_btn = tk.Button(search_frame, text="清除搜索", command=self.clear_search_items,
+        clear_btn = tk.Button(button_frame, text="清除搜索", command=self.clear_search_items,
                              font=('微软雅黑', 9), bg='#95a5a6', fg='white')
         clear_btn.pack(side='left', padx=5)
         
@@ -802,75 +983,64 @@ class InventoryManagementSystem:
         tk.Button(dialog, text="确认", command=submit).pack(pady=10)
     
     def search_inventory(self):
-        """搜索库存"""
+        """搜索库存状态"""
         keyword = self.search_var.get().strip()
-        if not keyword:
-            messagebox.showwarning("提示", "请输入搜索关键词")
+        category_filter = self.category_filter_var.get()
+        status_filter = self.status_filter_var.get()
+        
+        # 如果所有条件都是默认值，显示所有数据
+        if not keyword and category_filter == "全部" and status_filter == "全部":
+            self._update_inventory_table(self.db.get_inventory_status())
+            messagebox.showinfo("提示", "显示所有库存记录")
             return
         
-        # 获取搜索结果
-        search_results = self.db.search_inventory_status(keyword)
+        # 调用数据库搜索方法
+        results = self.db.search_inventory_status(keyword, category_filter, status_filter)
         
-        # 更新表格内容
-        self._update_inventory_table(search_results)
+        # 更新表格显示
+        self._update_inventory_table(results)
         
-        # 更新统计信息
-        total_items = len(search_results)
-        low_stock = len([i for i in search_results if i['status'] == '库存不足'])
-        high_stock = len([i for i in search_results if i['status'] == '库存过高'])
-        
-        stats_text = f"搜索结果: {total_items} 项 | 库存不足: {low_stock} | 库存过高: {high_stock}"
-        
-        # 查找并更新统计标签
-        for widget in self.content_frame.winfo_children():
-            if isinstance(widget, tk.Frame):
-                for child in widget.winfo_children():
-                    if isinstance(child, tk.Label) and '总物资数' in child.cget('text'):
-                        child.config(text=stats_text)
-                        break
+        # 显示搜索结果统计
+        messagebox.showinfo("搜索结果", f"找到 {len(results)} 条匹配记录")
     
     def clear_search_inventory(self):
-        """清除库存搜索"""
+        """清除搜索条件"""
         self.search_var.set("")
-        
-        # 重新显示所有库存数据
-        inventory_data = self.db.get_inventory_status()
-        self._update_inventory_table(inventory_data)
-        
-        # 更新统计信息
-        total_items = len(inventory_data)
-        low_stock = len([i for i in inventory_data if i['status'] == '库存不足'])
-        high_stock = len([i for i in inventory_data if i['status'] == '库存过高'])
-        
-        stats_text = f"总物资数: {total_items} | 库存不足: {low_stock} | 库存过高: {high_stock}"
-        
-        # 查找并更新统计标签
-        for widget in self.content_frame.winfo_children():
-            if isinstance(widget, tk.Frame):
-                for child in widget.winfo_children():
-                    if isinstance(child, tk.Label) and '总物资数' in child.cget('text') or '搜索结果' in child.cget('text'):
-                        child.config(text=stats_text)
-                        break
+        self.category_filter_var.set("全部")
+        self.status_filter_var.set("全部")
+        self._update_inventory_table(self.db.get_inventory_status())
+        messagebox.showinfo("提示", "已清除搜索条件，显示所有库存记录")
     
     def search_items(self):
         """搜索物资信息"""
         keyword = self.item_search_var.get().strip()
-        if not keyword:
-            messagebox.showwarning("提示", "请输入搜索关键词")
+        category_filter = self.item_category_filter_var.get()
+        supplier_filter = self.supplier_filter_var.get()
+        
+        # 如果所有条件都是默认值，显示所有数据
+        if not keyword and category_filter == "全部" and supplier_filter == "全部":
+            self._update_item_table(self.db.get_items())
+            messagebox.showinfo("提示", "显示所有物资记录")
             return
         
         # 调用数据库搜索方法
-        results = self.db.search_items(keyword)
+        results = self.db.search_items(keyword, category_filter, supplier_filter)
         
         # 更新表格内容
         self._update_item_table(results)
+        
+        # 显示搜索结果统计
+        messagebox.showinfo("搜索结果", f"找到 {len(results)} 条匹配记录")
     
     def clear_search_items(self):
         """清除物资搜索"""
         self.item_search_var.set("")
+        self.item_category_filter_var.set("全部")
+        self.supplier_filter_var.set("全部")
         # 恢复显示所有数据
         results = self.db.get_items()
         self._update_item_table(results)
+        messagebox.showinfo("提示", "已清除搜索条件，显示所有物资记录")
     
     def _update_item_table(self, data):
         """更新物资信息表格"""
@@ -913,14 +1083,46 @@ class InventoryManagementSystem:
                         return
     
     def submit_stock_in(self):
-        """提交入库"""
+        """提交入库操作"""
         try:
-            item_text = self.item_var.get()
-            quantity = int(self.quantity_var.get())
-            price = float(self.price_var.get())
+            # 获取表单数据
+            item_selection = self.item_var.get()
+            quantity = self.quantity_var.get()
+            unit_price = self.price_var.get()
+            supplier = self.supplier_var.get()
+            batch_number = self.batch_var.get()
             
-            # 解析物资信息
-            item_code = item_text.split(' - ')[0]
+            # 验证必填字段
+            if not item_selection:
+                messagebox.showerror("错误", "请选择物资")
+                return
+            if not quantity:
+                messagebox.showerror("错误", "请输入入库数量")
+                return
+            if not unit_price:
+                messagebox.showerror("错误", "请输入单价")
+                return
+            
+            # 验证数据格式
+            try:
+                quantity = int(quantity)
+                unit_price = float(unit_price)
+            except ValueError:
+                messagebox.showerror("错误", "数量和单价必须是数字")
+                return
+            
+            # 验证数据合理性
+            if quantity <= 0:
+                messagebox.showerror("错误", "入库数量必须大于0")
+                return
+            if unit_price < 0:
+                messagebox.showerror("错误", "单价不能为负数")
+                return
+            
+            # 解析物资选择
+            item_code = item_selection.split(' - ')[0]
+            
+            # 获取物资信息
             items = self.db.get_items()
             item_id = None
             for item in items:
@@ -928,36 +1130,82 @@ class InventoryManagementSystem:
                     item_id = item['item_id']
                     break
             
-            if item_id:
-                supplier = self.supplier_var.get()
-                batch_number = self.batch_var.get()
+            if not item_id:
+                messagebox.showerror("错误", "未找到选择的物资")
+                return
+            
+            # 执行入库操作
+            success = self.db.stock_in(
+                item_id=item_id,
+                quantity=quantity,
+                unit_price=unit_price,
+                supplier=supplier,
+                batch_number=batch_number,
+                operator_id=self.current_user['user_id']
+            )
+            
+            if success:
+                messagebox.showinfo("成功", "入库操作成功")
+                # 清空表单
+                self.item_var.set("")
+                self.quantity_var.set("")
+                self.price_var.set("")
+                self.supplier_var.set("")
+                self.batch_var.set("")
                 
-                if self.db.stock_in(item_id, quantity, price, supplier, batch_number):
-                    messagebox.showinfo("成功", "入库操作成功")
-                    # 清空表单
-                    self.item_var.set('')
-                    self.quantity_var.set('')
-                    self.price_var.set('')
-                    self.supplier_var.set('')
-                    self.batch_var.set('')
-                else:
-                    messagebox.showerror("错误", "入库操作失败")
+                # 入库后检查库存预警
+                self.alert_notification_shown = False  # 重置通知状态
+                self.check_stock_alerts()
             else:
-                messagebox.showerror("错误", "未找到对应的物资")
-        except ValueError:
-            messagebox.showerror("错误", "请输入有效的数字")
+                messagebox.showerror("错误", "入库操作失败")
+                
         except Exception as e:
-            messagebox.showerror("错误", f"操作失败: {str(e)}")
+            messagebox.showerror("错误", f"入库操作出错：{str(e)}")
     
     def submit_stock_out(self):
-        """提交出库"""
+        """提交出库操作"""
         try:
-            item_text = self.out_item_var.get()
-            quantity = int(self.out_quantity_var.get())
-            price = float(self.out_price_var.get())
+            # 获取表单数据
+            item_selection = self.out_item_var.get()
+            quantity = self.out_quantity_var.get()
+            unit_price = self.out_price_var.get()
+            recipient = self.recipient_var.get()
+            purpose = self.purpose_var.get()
             
-            # 解析物资信息
-            item_code = item_text.split(' - ')[0]
+            # 验证必填字段
+            if not item_selection:
+                messagebox.showerror("错误", "请选择物资")
+                return
+            if not quantity:
+                messagebox.showerror("错误", "请输入出库数量")
+                return
+            if not unit_price:
+                messagebox.showerror("错误", "请输入单价")
+                return
+            if not recipient:
+                messagebox.showerror("错误", "请输入领用人")
+                return
+            
+            # 验证数据格式
+            try:
+                quantity = int(quantity)
+                unit_price = float(unit_price)
+            except ValueError:
+                messagebox.showerror("错误", "数量和单价必须是数字")
+                return
+            
+            # 验证数据合理性
+            if quantity <= 0:
+                messagebox.showerror("错误", "出库数量必须大于0")
+                return
+            if unit_price < 0:
+                messagebox.showerror("错误", "单价不能为负数")
+                return
+            
+            # 解析物资选择
+            item_code = item_selection.split(' - ')[0]
+            
+            # 获取物资信息
             items = self.db.get_items()
             item_id = None
             for item in items:
@@ -965,26 +1213,49 @@ class InventoryManagementSystem:
                     item_id = item['item_id']
                     break
             
-            if item_id:
-                recipient = self.recipient_var.get()
-                purpose = self.purpose_var.get()
+            if not item_id:
+                messagebox.showerror("错误", "未找到选择的物资")
+                return
+            
+            # 检查库存是否足够
+            inventory = self.db.get_inventory_status()
+            current_stock = 0
+            for item in inventory:
+                if item['item_code'] == item_code:
+                    current_stock = item['current_stock']
+                    break
+            
+            if current_stock < quantity:
+                messagebox.showerror("错误", f"库存不足，当前库存：{current_stock}")
+                return
+            
+            # 执行出库操作
+            success = self.db.stock_out(
+                item_id=item_id,
+                quantity=quantity,
+                unit_price=unit_price,
+                recipient=recipient,
+                purpose=purpose,
+                operator_id=self.current_user['user_id']
+            )
+            
+            if success:
+                messagebox.showinfo("成功", "出库操作成功")
+                # 清空表单
+                self.out_item_var.set("")
+                self.out_quantity_var.set("")
+                self.out_price_var.set("")
+                self.recipient_var.set("")
+                self.purpose_var.set("")
                 
-                if self.db.stock_out(item_id, quantity, price, recipient, purpose):
-                    messagebox.showinfo("成功", "出库操作成功")
-                    # 清空表单
-                    self.out_item_var.set('')
-                    self.out_quantity_var.set('')
-                    self.out_price_var.set('')
-                    self.recipient_var.set('')
-                    self.purpose_var.set('')
-                else:
-                    messagebox.showerror("错误", "出库操作失败，可能库存不足")
+                # 出库后检查库存预警
+                self.alert_notification_shown = False  # 重置通知状态
+                self.check_stock_alerts()
             else:
-                messagebox.showerror("错误", "未找到对应的物资")
-        except ValueError:
-            messagebox.showerror("错误", "请输入有效的数字")
+                messagebox.showerror("错误", "出库操作失败")
+                
         except Exception as e:
-            messagebox.showerror("错误", f"操作失败: {str(e)}")
+            messagebox.showerror("错误", f"出库操作出错：{str(e)}")
 
 def main():
     """主函数"""
