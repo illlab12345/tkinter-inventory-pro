@@ -1,203 +1,201 @@
-# 库存管理系统
+# Inventory Management System
 
-一个功能完整、界面现代化的Python库存管理系统。系统采用tkinter图形界面，支持完整的物资生命周期管理，从类目维护到入库出库操作，提供全方位的库存监控和管理功能。（我已经上传到了我的GitHub仓库里[illlab12345/tkinter-inventory-pro](https://github.com/illlab12345/tkinter-inventory-pro)）
+A fully functional, modern Python-based inventory management system. Built with a tkinter graphical interface, it supports end-to-end material lifecycle management—from category maintenance to stock-in/out operations—providing comprehensive inventory monitoring and management capabilities. 
 
+## 🚀 System Features
 
+### Core Function Highlights
+- **📦 End-to-End Material Management** - Complete closed-loop process from category establishment to inventory monitoring
+- **🔍 Intelligent Inventory Alerts** - Automatically identifies low/overstock statuses with manual/automatic check support
+- **🔎 Advanced Search Function** - Multi-condition combined search + real-time keyword search
+- **📊 Real-Time Data Statistics** - Dynamically updated inventory status and operation records
+- **💾 Data Persistence** - SQLite database ensures secure and reliable data storage
 
-## 🚀 系统特色
+### Technical Advantages
+- **Modern GUI Interface** - Intuitive user experience based on tkinter
+- **Responsive Design** - Horizontal and vertical scrolling support for large datasets
+- **Modular Architecture** - Clear code structure and maintainable design
+- **Comprehensive Error Handling** - Robust system exception handling mechanism
+- **Intelligent Notification System** - Smart display control for alert notifications
 
-### 核心功能亮点
-- **📦 全流程物资管理** - 从类目建立到库存监控的完整闭环
-- **🔍 智能库存预警** - 自动识别库存不足/过高状态，支持手动/自动检查
-- **🔎 高级搜索功能** - 多条件组合搜索 + 实时关键词搜索
-- **📊 实时数据统计** - 动态更新的库存状态和操作记录
-- **💾 数据持久化** - SQLite数据库确保数据安全可靠
+## 📋 Function Module Details
 
-### 技术优势
-- **现代化GUI界面** - 基于tkinter的直观操作体验
-- **响应式设计** - 支持水平和垂直滑动查看大数据量
-- **模块化架构** - 清晰的代码结构和易于维护的设计
-- **完整错误处理** - 健壮的系统异常处理机制
-- **智能通知系统** - 预警通知的智能显示控制
+### 1. Inventory Status Monitoring 📈
+- **Real-Time Inventory Display** - Shows current stock levels of all materials
+- **Intelligent Status Identification** - Automatically marks insufficient stock (red), overstock (orange), and normal stock (green)
+- **Inventory Alert System** - Intelligent warnings based on preset minimum/maximum stock limits
+- **Manual Alert Check** - Supports users to actively click the "Check Inventory Alerts" button for real-time checks
+- **Intelligent Notification Control** - Automatic check on system startup; forced notification display for manual checks
+- **Real-Time Statistical Updates** - Alert statistics label dynamically reflects inventory status changes
+- **Data Visualization** - Clear presentation of key inventory metrics in tabular format
 
-## 📋 功能模块详解
+### 2. Material Category Management 🗂️
+- **Category System Construction** - Supports multi-level category structure to establish a complete material classification system
+- **Category Information Maintenance** - Includes complete details such as category name, description, and parent category
+- **Flexible Management** - Add, view, and adjust categories as needed
+- **Relationship Management** - Maintains hierarchical relationships between categories
 
-### 1. 库存状态监控 📈
-- **实时库存展示** - 显示所有物资的当前库存数量
-- **智能状态标识** - 自动标记库存不足（红色）、库存过高（橙色）、正常（绿色）
-- **库存预警系统** - 基于预设的库存上下限进行智能预警
-- **手动预警检查** - 支持用户主动点击"检查库存预警"按钮进行实时检查
-- **智能通知控制** - 系统启动时自动检查，手动检查时强制显示通知
-- **实时统计更新** - 预警统计标签动态显示库存状态变化
-- **数据可视化** - 表格形式清晰展示库存关键指标
+### 3. Material Information Management 📝
+- **Comprehensive Information Fields**:
+  - Basic Information: Material code, name, specification, unit
+  - Supplier Information: Supplier name, contact details
+  - Price Information: Purchase price, sales price
+  - Inventory Settings: Minimum stock limit, maximum stock limit
+- **Bulk Management** - Supports centralized management of large volumes of material information
+- **Advanced Search Function**:
+  - **Multi-Condition Combined Search** - Supports flexible combined queries by keyword, category, and supplier
+  - **Real-Time Keyword Search** - Instant filtering during input to improve search efficiency
+  - **Intelligent Search Interface** - Clear search condition selection and result display
 
-### 2. 物资类目管理 🗂️
-- **类目体系构建** - 支持多级类目结构，建立完整的物资分类体系
-- **类目信息维护** - 包含类目名称、描述、父类目等完整信息
-- **灵活管理** - 支持类目的添加、查看和分类调整
-- **关系管理** - 维护类目间的层级关系
+### 4. Stock-In Management ➕
+- **Stock-In Process**:
+  1. Select materials to stock in
+  2. Enter quantity and unit price
+  3. Record supplier and batch information
+  4. System automatically updates inventory
+- **Batch Tracking** - Supports batch number management for quality traceability
+- **Amount Calculation** - Automatically calculates total stock-in amount
+- **History Records** - Complete logs of all stock-in operations
 
-### 3. 物资信息管理 📝
-- **完整信息字段**：
-  - 基础信息：物资编码、名称、规格、单位
-  - 供应商信息：供应商名称、联系方式
-  - 价格信息：采购价、销售价
-  - 库存设置：最低库存、最高库存限制
-- **批量管理** - 支持大量物资信息的集中管理
-- **高级搜索功能**：
-  - **多条件组合搜索** - 支持按关键词、类目、供应商的组合搜索
-  - **实时关键词搜索** - 输入时即时过滤，提升搜索效率
-  - **智能搜索界面** - 清晰的搜索条件选择和结果显示
+### 5. Stock-Out Management ➖
+- **Stock-Out Process**:
+  1. Select materials to stock out
+  2. Enter quantity and unit price
+  3. Record recipient and usage purpose
+  4. System verifies stock availability and deducts accordingly
+- **Stock Verification** - Automatically checks stock availability to prevent over-issuance
+- **Usage Recording** - Detailed recipient and usage information for each stock-out
+- **Security Control** - Ensures accuracy and security of stock-out operations
 
-### 4. 入库管理 ➕
-- **入库流程**：
-  1. 选择入库物资
-  2. 输入入库数量和单价
-  3. 记录供应商和批次信息
-  4. 系统自动更新库存
-- **批次跟踪** - 支持批次号管理，便于质量追溯
-- **金额计算** - 自动计算入库总金额
-- **历史记录** - 完整的入库操作日志
+### 6. Record Query 🔍
+- **Stock-In Record Query** - View detailed information of all stock-in operations
+- **Stock-Out Record Query** - Track material issuance history
+- **Operation Traceability** - Filter by time, operator, and other conditions
+- **Data Export** - Facilitates subsequent data analysis and report generation
 
-### 5. 出库管理 ➖
-- **出库流程**：
-  1. 选择出库物资
-  2. 输入出库数量和单价
-  3. 记录领用人和用途
-  4. 系统验证库存并扣减
-- **库存验证** - 自动检查库存是否充足，防止超额出库
-- **用途记录** - 详细的出库用途和领用人信息
-- **安全控制** - 确保出库操作的准确性和安全性
+### 7. User Management 👤
+- **User Roles**:
+  - Administrator: Full access to all functions
+- **User Information** - Maintains basic user details such as username, password, and full name
+- **Permission Control** - Role-based function access control
 
-### 6. 记录查询 🔍
-- **入库记录查询** - 查看所有入库操作的详细信息
-- **出库记录查询** - 追踪物资出库历史
-- **操作追溯** - 支持按时间、操作员等条件筛选
-- **数据导出** - 便于后续数据分析和报表生成
+## 🏗️ System Architecture
 
-### 7. 用户管理 👤
-- **用户角色**：
-  - 管理员：拥有所有功能权限
-- **用户信息** - 维护用户名、密码、姓名等基本信息
-- **权限控制** - 基于角色的功能访问控制
-
-## 🏗️ 系统架构
-
-### 文件结构
+### File Structure
 ```
-库存管理系统/
-├── main.py              # 主程序入口，系统启动和初始化
-├── database.py          # 数据库管理核心模块
-├── gui.py              # 图形用户界面实现
-├── sample_data.py      # 示例数据生成器
-├── check_database.py   # 数据库检查工具
-├── inventory.db        # SQLite数据库文件（运行后生成）
-└── README.md           # 系统说明文档
+Inventory Management System/
+├── main.py              # Main program entry, system startup and initialization
+├── database.py          # Core database management module
+├── gui.py               # Graphical user interface implementation
+├── sample_data.py       # Sample data generator
+├── check_database.py    # Database checking tool
+├── inventory.db         # SQLite database file (generated after first run)
+└── README.md            # System documentation
 ```
 
-### 数据库设计
-系统采用6个核心数据表，确保数据的完整性和一致性：
+### Database Design
+The system uses 6 core data tables to ensure data integrity and consistency:
 
-| 表名 | 功能描述 | 关键字段 |
-|------|----------|----------|
-| **users** | 用户信息管理 | 用户ID、用户名、密码、角色、创建时间 |
-| **categories** | 物资类目管理 | 类目ID、类目名称、描述、父类目ID |
-| **items** | 物资基本信息 | 物资ID、编码、名称、类目、规格、供应商、价格 |
-| **inventory** | 库存管理 | 库存ID、物资ID、数量、批次号、有效期 |
-| **stock_in** | 入库记录 | 入库ID、物资ID、数量、单价、供应商、操作员 |
-| **stock_out** | 出库记录 | 出库ID、物资ID、数量、单价、领用人、用途 |
+| Table Name | Function Description | Key Fields |
+|------------|----------------------|------------|
+| **users** | User information management | User ID, username, password, role, creation time |
+| **categories** | Material category management | Category ID, category name, description, parent category ID |
+| **items** | Basic material information | Material ID, code, name, category, specification, supplier, price |
+| **inventory** | Inventory management | Inventory ID, material ID, quantity, batch number, expiration date |
+| **stock_in** | Stock-in records | Stock-in ID, material ID, quantity, unit price, supplier, operator |
+| **stock_out** | Stock-out records | Stock-out ID, material ID, quantity, unit price, recipient, purpose |
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 环境要求
-- **Python版本**: 3.6+
-- **必需模块**: tkinter（通常随Python标准库安装）
-- **操作系统**: Windows 7+/macOS 10.9+/Linux
+### Environment Requirements
+- **Python Version**: 3.6+
+- **Required Modules**: tkinter (usually included in Python standard library)
+- **Operating Systems**: Windows 7+/macOS 10.9+/Linux
 
-### 安装步骤
+### Installation Steps
 
-#### 方法一：直接运行（推荐）
+#### Method 1: Direct Run (Recommended)
 ```bash
-# 进入项目目录
-cd 库存
+# Navigate to project directory
+cd Inventory
 
-# 运行系统（自动初始化示例数据）
+# Run the system (sample data initialized automatically)
 python main.py
 ```
 
-#### 方法二：分步运行
+#### Method 2: Step-by-Step Run
 ```bash
-# 1. 生成示例数据
+# 1. Generate sample data
 python sample_data.py
 
-# 2. 启动系统
+# 2. Start the system
 python main.py
 ```
 
-### 首次使用
-1. **直接启动系统**：
-   - 运行 `python main.py` 后直接进入主界面
-   - **无需登录**，系统自动以管理员身份运行
-   - 默认管理员账号：`admin`（密码：`admin123`，但无需输入）
+### First-Time Use
+1. **Direct System Startup**:
+   - Run `python main.py` to enter the main interface directly
+   - **No login required**—system automatically runs as administrator
+   - Default administrator account: `admin` (password: `admin123`, not required for login)
 
-2. **示例数据初始化**（可选）：
-   - 系统首次运行时，如果检测到数据库为空，会自动生成示例数据
-   - 包含5个物资类目、15种物资信息、3个系统用户和初始库存
-   - 如果已有数据，系统会直接使用现有数据
+2. **Sample Data Initialization** (Optional):
+   - When the system runs for the first time, it automatically generates sample data if the database is empty
+   - Includes 5 material categories, 15 material types, 3 system users, and initial inventory
+   - Existing data will be used directly if available
 
-## 💻 界面操作指南
+## 💻 Interface Operation Guide
 
-### 主界面布局
-- **左侧导航栏** - 快速访问各功能模块
-- **顶部标题栏** - 系统标题和状态显示
-- **主内容区域** - 功能操作和数据显示
+### Main Interface Layout
+- **Left Navigation Bar** - Quick access to all functional modules
+- **Top Title Bar** - System title and status display
+- **Main Content Area** - Function operations and data display
 
-### 滑动功能使用
-所有表格界面均支持：
-- **垂直滑动** - 鼠标滚轮或拖动右侧滚动条上下浏览
-- **水平滑动** - 拖动底部滚动条左右查看完整列信息
-- **自适应显示** - 根据数据量自动调整滚动条显示
+### Scrolling Function Usage
+All table interfaces support:
+- **Vertical Scrolling** - Use mouse wheel or drag right scrollbar to browse up/down
+- **Horizontal Scrolling** - Drag bottom scrollbar to view complete column information
+- **Adaptive Display** - Scrollbars automatically adjust based on data volume
 
-### 快捷键操作
-- `Tab` - 在表单字段间切换
-- `Enter` - 确认操作或提交表单
-- `Esc` - 关闭对话框或取消操作
+### Keyboard Shortcuts
+- `Tab` - Switch between form fields
+- `Enter` - Confirm operation or submit form
+- `Esc` - Close dialog box or cancel operation
 
-## 🔧 高级功能
+## 🔧 Advanced Features
 
-### 批次管理
-- 支持物资的批次号跟踪
-- 有效期管理功能
-- 批次库存独立统计
+### Batch Management
+- Supports material batch number tracking
+- Expiration date management
+- Independent batch inventory statistics
 
-### 库存预警系统
-- 基于min_stock和max_stock的智能预警
-- 实时状态颜色标识
-- 预警阈值可自定义设置
+### Inventory Alert System
+- Intelligent alerts based on min_stock and max_stock settings
+- Real-time status color coding
+- Customizable alert thresholds
 
-### 数据统计分析
-- 入库出库数据汇总
-- 库存周转率计算
-- 物资使用频率分析
+### Data Statistical Analysis
+- Stock-in/out data summary
+- Inventory turnover rate calculation
+- Material usage frequency analysis
 
-## 🛠️ 开发与扩展
+## 🛠️ Development and Expansion
 
-### 代码结构特点
+### Code Structure Features
 ```python
-# 清晰的面向对象设计
-class DatabaseManager:    # 数据库操作封装
-class InventoryManagementSystem:  # 主界面控制器
+# Clear object-oriented design
+class DatabaseManager:    # Database operation encapsulation
+class InventoryManagementSystem:  # Main interface controller
 
-# 模块化功能分离
-def show_inventory_status():   # 库存状态显示
-def show_category_management(): # 类目管理界面
+# Modular function separation
+def show_inventory_status():   # Inventory status display
+def show_category_management(): # Category management interface
 ```
 
-## 🐛 故障排除
+## 🐛 Troubleshooting
 
-### 常见问题解决方案
+### Common Problem Solutions
 
-#### 启动问题
+#### Startup Issues
 1. **"No module named 'tkinter'"**
    ```bash
    # Ubuntu/Debian
@@ -207,100 +205,100 @@ def show_category_management(): # 类目管理界面
    sudo yum install tkinter
    ```
 
-2. **界面显示异常**
-   - 调整系统显示缩放设置为100%
-   - 检查系统字体安装情况
+2. **Interface Display Abnormalities**
+   - Adjust system display scaling to 100%
+   - Check system font installation
 
-#### 运行问题
-1. **数据库连接失败**
-   - 检查文件读写权限
-   - 确保磁盘空间充足
-   - 验证数据库文件完整性
+#### Runtime Issues
+1. **Database Connection Failure**
+   - Verify file read/write permissions
+   - Ensure sufficient disk space
+   - Validate database file integrity
 
-2. **数据操作错误**
-   - 重启系统尝试
-   - 检查输入数据格式
-   - 查看系统日志信息
+2. **Data Operation Errors**
+   - Try restarting the system
+   - Check input data format
+   - View system log information
 
-### 性能优化建议
-- 定期清理历史记录数据
-- 对大型数据集启用分页显示
-- 考虑数据库索引优化
+### Performance Optimization Suggestions
+- Regularly clean up historical record data
+- Enable pagination for large datasets
+- Consider database index optimization
 
-## 📊 系统性能
+## 📊 System Performance
 
-### 数据处理能力
-- **支持物资数量**: 10,000+
-- **并发用户数**: 5-10人
-- **响应时间**: < 2秒（常规操作）
+### Data Processing Capabilities
+- **Supported Material Quantity**: 10,000+
+- **Concurrent Users**: 5-10
+- **Response Time**: < 2 seconds (regular operations)
 
-### 数据安全
-- 本地数据库存储，数据不上传云端
-- 用户密码加密存储
-- 操作日志完整记录
+### Data Security
+- Local database storage—no data uploaded to the cloud
+- Encrypted user password storage
+- Complete operation log records
 
-## � 系统优化更新
+## 🛠️ System Optimization Updates
 
-### 最新功能增强
+### Latest Feature Enhancements
 
-#### 🔍 智能搜索系统升级
-- **多条件组合搜索**：支持关键词、类目、供应商的灵活组合查询
-- **实时搜索体验**：输入关键词时即时过滤，无需点击搜索按钮
-- **搜索界面优化**：清晰的搜索条件选择和直观的搜索结果展示
+#### 🔍 Intelligent Search System Upgrade
+- **Multi-Condition Combined Search**: Supports flexible combined queries by keyword, category, and supplier
+- **Real-Time Search Experience**: Instant filtering during keyword input—no need to click search button
+- **Search Interface Optimization**: Clear search condition selection and intuitive result display
 
-#### ⚠️ 库存预警系统优化
-- **手动预警检查**：新增"检查库存预警"按钮，支持用户主动触发预警检查
-- **智能通知控制**：
-  - 系统启动时自动检查并显示预警通知
-  - 手动检查时强制显示预警对话框，确保重要信息不被遗漏
-  - 操作后自动重置通知状态，及时反映库存变化
-- **实时统计更新**：预警统计标签动态显示库存不足和库存过高的物资数量
+#### ⚠️ Inventory Alert System Optimization
+- **Manual Alert Check**: Added "Check Inventory Alerts" button to support active alert triggering by users
+- **Intelligent Notification Control**:
+  - Automatic check and alert notification display on system startup
+  - Forced alert dialog display for manual checks to ensure critical information is not missed
+  - Automatic notification status reset after operations to reflect inventory changes in real time
+- **Real-Time Statistical Updates**: Alert statistics label dynamically shows the number of materials with insufficient/overstock status
 
-#### 🎨 用户界面改进
-- **响应式交互**：所有按钮点击均有明确的视觉反馈
-- **状态实时更新**：界面元素随数据变化动态刷新
-- **操作流程优化**：更直观的操作引导和错误提示
+#### 🎨 User Interface Improvements
+- **Responsive Interaction**: Clear visual feedback for all button clicks
+- **Real-Time Status Updates**: Interface elements refresh dynamically with data changes
+- **Operation Process Optimization**: More intuitive operation guidance and error prompts
 
-### 版本历史
-- **v1.1** - 优化版本（当前版本）
-  - 新增多条件组合搜索和实时搜索功能
-  - 优化库存预警系统，支持手动检查和智能通知
-  - 改进用户界面交互体验
-  - 修复已知问题和性能优化
+### Version History
+- **v1.1** - Optimization Version (Current Version)
+  - Added multi-condition combined search and real-time search functions
+  - Optimized inventory alert system with manual check and intelligent notification support
+  - Improved user interface interaction experience
+  - Fixed known issues and optimized performance
 
-- **v1.0** - 基础功能版本
-  - 支持完整的库存管理流程
-  - 现代化的GUI界面
-  - 稳定的数据持久化
+- **v1.0** - Basic Function Version
+  - Supports complete inventory management process
+  - Modern GUI interface
+  - Stable data persistence
 
-## 📄 许可证与支持
+## 📄 License and Support
 
-### 许可证
-本项目为开源项目，遵循MIT许可证，允许自由使用、修改和分发。
+### License
+This project is open-source under the MIT License, allowing free use, modification, and distribution.
 
-### 技术支持
-- **文档更新**: 定期维护使用文档
-- **功能建议**: 欢迎提出改进建议
+### Technical Support
+- **Documentation Updates**: Regular maintenance of user documentation
+- **Feature Suggestions**: Welcome to submit improvement suggestions
 
-## 🤝 贡献指南
+## 🤝 Contribution Guidelines
 
-欢迎为项目贡献代码或提出改进建议：
+Contributions to the project are welcome:
 
-1. Fork本项目
-2. 创建功能分支
-3. 提交更改
-4. 推送到分支
-5. 创建Pull Request
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-## 📞 联系
+## 📞 Contact
 
-如有任何问题或建议，请通过以下方式联系：
-- 🌐 网站：：https://github.com/illlab12345
+For any questions or suggestions, please contact us via:
+- 🌐 GitHub: https://github.com/illlab12345
 
 ---
 
-## 🎯 总结
+## 🎯 Summary
 
-本库存管理系统是一个功能完整、易于使用的物资管理解决方案，特别适合中小型企业的日常库存管理需求。系统结合了现代化的用户界面和稳定的后台处理，为用户提供高效、可靠的库存管理体验。
+This Inventory Management System is a fully functional, easy-to-use material management solution, specifically designed for daily inventory management needs of small and medium-sized enterprises. Combining a modern user interface with stable backend processing, it provides users with an efficient and reliable inventory management experience.
 
-**立即体验**：运行 `python main.py` 开始使用系统！
+**Get Started Now**: Run `python main.py` to start using the system!
